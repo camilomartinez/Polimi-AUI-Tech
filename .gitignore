@@ -1,3 +1,4 @@
 /data/*.Rhistory
 *.RData
 data/train.csv
+submissions/
