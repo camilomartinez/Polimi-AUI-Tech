@@ -18,8 +18,8 @@ scheme <- evaluationScheme(train.sparse,
 algorithms <- list(
   "random" = list(name="RANDOM", param=list(normalize = "Z-score")),
   "popular" = list(name="POPULAR", param=list(normalize = "Z-score")),
-  "user-based CF" = list(name="UBCF", param=list(normalize = "Z-score",method="Cosine",nn=50, minRating=3)),
-  "item-based CF" = list(name="IBCF", param=list(normalize = "Z-score")))
+  "user-based CF" = list(name="UBCF", param=list(normalize = "Z-score",method="Cosine",nn=50, minRating=3)))
+  #"item-based CF" = list(name="IBCF", param=list(normalize = "Z-score")))
 
 results <- evaluate(scheme, algorithms, n=c(1,3,5,10))
 
