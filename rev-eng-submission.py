@@ -5,7 +5,6 @@ test_file = open('data/testInteractions.csv', 'rb')
 test_csv = csv.reader(test_file)
 header = test_csv.next()
 
-
 #Seen movies map
 userId = ''
 seenMovies = []
@@ -50,6 +49,7 @@ for row in mappedRatings_csv:
     if userId != '':
       predicted_movies = " ".join(mapped_movies[:5])
       prediction_csv.writerow([userId,predicted_movies])
+      del seenMoviesByUserId[userId]
     # Update current user and reset predicted movies
     userId = row[0]
     mapped_movies = []
@@ -59,6 +59,12 @@ for row in mappedRatings_csv:
 # Last user
 predicted_movies = " ".join(mapped_movies[:5])
 prediction_csv.writerow([userId,predicted_movies])
+del seenMoviesByUserId[userId]
+
+#Missing movies
+for userId, movies in seenMoviesByUserId.iteritems():
+  predicted_movies = " ".join(movies[:5])
+  prediction_csv.writerow([userId,predicted_movies])
 
 mappedRatings_file.close()
 prediction_file.close()
