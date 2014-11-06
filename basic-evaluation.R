@@ -16,12 +16,13 @@ scheme <- evaluationScheme(train.sparse,
                                            # are relevant
 
 algorithms <- list(
-  "random" = list(name="RANDOM", param=list(normalize = "Z-score")),
-  "popular" = list(name="POPULAR", param=list(normalize = "Z-score")),
-  "user-based CF" = list(name="UBCF", param=list(normalize = "Z-score",method="Cosine",nn=50, minRating=3)))
+  "random items" = list(name="RANDOM", param=list(normalize = "Z-score")),
+  "popular items" = list(name="POPULAR", param=list(normalize = "Z-score")),
+  #"user-based CF" = list(name="UBCF", param=list(normalize = "Z-score",method="pearson",nn=10, minRating=4)),
+  "SVD" = list(name="SVD")
+)
   #"item-based CF" = list(name="IBCF", param=list(normalize = "Z-score")))
 
 results <- evaluate(scheme, algorithms, n=c(1,3,5,10))
 
 plot (results, annotate = 1:4, legend="topleft")
-plot (results, "prec/rec", annotate = 3)
