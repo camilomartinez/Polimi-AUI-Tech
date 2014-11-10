@@ -1,6 +1,9 @@
 # For aggregation
-require(data.table)
-require(plyr)
+library(plyr)
+# For evaluation
+library("Metrics")
+# Custom common functions
+source("C:/Polimi/aui-rs/Polimi-AUI-Tech/custom-functions.R")
 
 # Path were data is located
 setwd("C:/Polimi/aui-rs/Polimi-AUI-Tech/data")
@@ -8,33 +11,61 @@ setwd("C:/Polimi/aui-rs/Polimi-AUI-Tech/data")
 # Complete training user rating matrix
 URM <- read.csv("train.csv")
 
-# Only consider ratings >= 4
-goodRatings <- URM[URM$Rating >= 4,]
+mostPopularMovies <- mostPopularItems(URM)
 
-# Ordering movies by popularity
-itemCount <- count(goodRatings, "ItemId")
-moviesByPopularity <- arrange(itemCount, desc(freq))
-tenMostPopularMovies <- as.vector(moviesByPopularity[1:10,"ItemId"])
+#Wheter we are evaluating or submitting results
+evaluation = TRUE
 
-# Generate recommendations by removing known movies per user
+# Test users Id
 testUsers <- read.csv("test.csv")
 # Get ratings from test users
 testRatings <- merge(testUsers, URM)
-# Movies seen by each testUser
-knownItems = ddply(testRatings, "UserId", summarise, ItemIds = list(ItemId))
+# Ratings without test users
+nonTestRatings <- URM[! URM$UserId %in% testUsers$UserId,]
+if (evaluation) {
+  knownRatings = nonTestRatings
+} else {
+  knownRatings = testRatings
+}
+# Movies seen by each user
+knownItems = ddply(knownRatings, "UserId", summarise, ItemIds = list(ItemId))
 # Generate a recommendation per user
-recommendedItems <- ddply(knownItems, "UserId", function(row) {
-  # Retrieve seen movies Id
-  seenMovies <- row$ItemIds[[1]]
-  # Remove seen from popular
-  notSeenPopularMovies <- setdiff(tenMostPopularMovies,seenMovies)
-  # 5 most popular not seen are concatenated separated by space
-  ItemId <- notSeenPopularMovies[1:5]
-  data.frame(ItemId)
+recommendations <- ddply(knownItems, "UserId", function(row) {
+  if (evaluation)
+  {
+    # Most popular Movies
+    data.frame(ItemId = mostPopularMovies[1:5])
+  } else {
+    # Retrieve seen movies Id
+    seenMovies <- row$ItemIds[[1]]
+    # Remove seen from popular
+    notSeenPopularMovies <- setdiff(mostPopularMovies,seenMovies)
+    # 5 most popular not seen
+    data.frame(ItemId = notSeenPopularMovies[1:5])
+  }
 })
+# Aggregating recommendations per user
+recommendedPerUser <- ddply(recommendations, "UserId", summarise,
+                           ItemIds = list(ItemId),
+                           RecommendedMovieIds = paste(ItemId, collapse = " "))
 
-# Output format
-submission = ddply(recommendedItems, "UserId", summarise,
-                   RecommendedMovieIds = paste(ItemId, collapse=" "))
+if (evaluation) {
+  #Evaluation with optimistic MAP
+  getItemIdsVector <- function(df) {
+    df$ItemIds[[1]]
+  }
+  actual = dlply(knownItems, "UserId", getItemIdsVector)
+  predicted = dlply(recommendedPerUser, "UserId", getItemIdsVector)
+  mapk(5,actual, predicted)  
+} else {
+  # submission in output format
+  # Output format
+  submission <- recommendedPerUser
+  # Drop vector of Ids for the output
+  submission$ItemIds <- NULL
+  write.table(submission, 
+              file="submission.csv", 
+              sep=",", quote=FALSE, 
+              row.names = FALSE)
+}
 
-write.table(submission, file="submission.csv", sep=",", quote=FALSE, row.names = FALSE)
