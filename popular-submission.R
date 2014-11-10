@@ -23,17 +23,18 @@ testRatings <- merge(testUsers, URM)
 # Movies seen by each testUser
 knownItems = ddply(testRatings, "UserId", summarise, ItemIds = list(ItemId))
 # Generate a recommendation per user
-submission <- ddply(knownItems, "UserId", function(row) {
+recommendedItems <- ddply(knownItems, "UserId", function(row) {
   # Retrieve seen movies Id
   seenMovies <- row$ItemIds[[1]]
   # Remove seen from popular
   notSeenPopularMovies <- setdiff(tenMostPopularMovies,seenMovies)
   # 5 most popular not seen are concatenated separated by space
-  RecommendedMovieIds <-paste(notSeenPopularMovies[1:5], collapse=" ")
-  data.frame(RecommendedMovieIds)
+  ItemId <- notSeenPopularMovies[1:5]
+  data.frame(ItemId)
 })
 
-write.table(submission, file="submission.csv", sep=",", quote=FALSE, row.names = FALSE)
+# Output format
+submission = ddply(recommendedItems, "UserId", summarise,
+                   RecommendedMovieIds = paste(ItemId, collapse=" "))
 
-users = read.csv("userMeta.csv")
-movies = read.csv("movieMetaCorrected.csv")
+write.table(submission, file="submission.csv", sep=",", quote=FALSE, row.names = FALSE)
