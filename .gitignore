@@ -2,3 +2,4 @@
 *.RData
 data/train.csv
 submissions/
+.Rproj.user

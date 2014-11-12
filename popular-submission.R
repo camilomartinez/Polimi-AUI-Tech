@@ -5,58 +5,34 @@ library("Metrics")
 # Custom common functions
 source("C:/Polimi/aui-rs/Polimi-AUI-Tech/custom-functions.R")
 
-# Path were data is located
-setwd("C:/Polimi/aui-rs/Polimi-AUI-Tech/data")
+# Configurations constants
+# Wheter we are evaluating or submitting results
+evaluation = TRUE
+kRemoveSeen = ! evaluation
+kSubmission = ! evaluation
+kNumberOfRecommendations = 5
 
 # Complete training user rating matrix
-URM <- read.csv("train.csv")
+urm <- LoadURM()
 
-mostPopularMovies <- mostPopularItems(URM)
+# Recommendation functions
+recommend <- PopularRecommender(urm, kRemoveSeen, kNumberOfRecommendations)
 
-#Wheter we are evaluating or submitting results
-evaluation = TRUE
-
-# Test users Id
-testUsers <- read.csv("test.csv")
-# Get ratings from test users
-testRatings <- merge(testUsers, URM)
-# Ratings without test users
-nonTestRatings <- URM[! URM$UserId %in% testUsers$UserId,]
 if (evaluation) {
-  knownRatings = nonTestRatings
+  seenItems = ItemsSeenByNonTestUsers(urm)
 } else {
-  knownRatings = testRatings
+  seenItems = ItemsSeenByTestUsers(urm)
 }
-# Movies seen by each user
-knownItems = ddply(knownRatings, "UserId", summarise, ItemIds = list(ItemId))
+
 # Generate a recommendation per user
-recommendations <- ddply(knownItems, "UserId", function(row) {
-  if (evaluation)
-  {
-    # Most popular Movies
-    data.frame(ItemId = mostPopularMovies[1:5])
-  } else {
-    # Retrieve seen movies Id
-    seenMovies <- row$ItemIds[[1]]
-    # Remove seen from popular
-    notSeenPopularMovies <- setdiff(mostPopularMovies,seenMovies)
-    # 5 most popular not seen
-    data.frame(ItemId = notSeenPopularMovies[1:5])
-  }
-})
-# Aggregating recommendations per user
-recommendedPerUser <- ddply(recommendations, "UserId", summarise,
-                           ItemIds = list(ItemId),
-                           RecommendedMovieIds = paste(ItemId, collapse = " "))
+recommendedPerUser <- GenerateRecommendations(seenItems, recommend ,kSubmission)
 
 if (evaluation) {
   #Evaluation with optimistic MAP
-  getItemIdsVector <- function(df) {
-    df$ItemIds[[1]]
-  }
-  actual = dlply(knownItems, "UserId", getItemIdsVector)
-  predicted = dlply(recommendedPerUser, "UserId", getItemIdsVector)
-  mapk(5,actual, predicted)  
+  actual = dlply(seenItems, "UserId", GetItemIdsVector)
+  predicted = dlply(recommendedPerUser, "UserId", GetItemIdsVector)
+  # Mean average precision from metrics package
+  mapk(kNumberOfRecommendations,actual, predicted)  
 } else {
   # submission in output format
   # Output format
