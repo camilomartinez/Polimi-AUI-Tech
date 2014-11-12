@@ -3,11 +3,11 @@ library(plyr)
 # For evaluation
 library("Metrics")
 # Custom common functions
-source("C:/Polimi/aui-rs/Polimi-AUI-Tech/custom-functions.R")
+source("custom-functions.R")
 
 # Configurations constants
 # Wheter we are evaluating or submitting results
-evaluation = TRUE
+evaluation = FALSE
 kRemoveSeen = ! evaluation
 kSubmission = ! evaluation
 kNumberOfRecommendations = 5
@@ -40,7 +40,7 @@ if (evaluation) {
   # Drop vector of Ids for the output
   submission$ItemIds <- NULL
   write.table(submission, 
-              file="submission.csv", 
+              file="submissions/submission.csv", 
               sep=",", quote=FALSE, 
               row.names = FALSE)
 }

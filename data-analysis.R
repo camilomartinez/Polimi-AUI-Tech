@@ -1,7 +1,8 @@
-setwd("C:/Polimi/aui-rs/Polimi-AUI-Tech/data")
+# Load required library
+library(recommenderlab) # package being evaluated
+library(ggplot2) # For plots
 
-
-train = read.csv("train.csv")
+train = read.csv("data/train.csv")
 
 # Coerce to the class used by recommenderlab
 r <- as(train, "realRatingMatrix")

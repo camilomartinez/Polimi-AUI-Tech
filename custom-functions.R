@@ -5,11 +5,10 @@ library(plyr)
 # removeSeen: Wheter to recommend already seen interactions
 # n: how many items to recommend
 PopularRecommender <- function(urm, removeSeen, n) {
-  mostPopularItems <- mostPopularItems(urm)
+  mostPopularItems <- MostPopularItems(urm)
   function(userRow) {
-    force(userRow)
     if (removeSeen) {
-      recommendedItems <- removeSeenItems(userRow, mostPopularItems)
+      recommendedItems <- RemoveSeenItems(userRow, mostPopularItems)
       # Take as many as n items
       head(recommendedItems, n)
     } else {
@@ -22,14 +21,14 @@ PopularRecommender <- function(urm, removeSeen, n) {
 # Return most popular items by count of goodRatings
 # Expects a User Rating Matrix data frame
 # with the columns "UserId", "ItemId" and "Rating"
-mostPopularItems <- function(URM) {
+MostPopularItems <- function(URM) {
   # Only consider ratings >= 4
-  goodRatings <- filterGoodRatings(URM,4)
+  goodRatings <- FilterGoodRatings(URM,4)
   # Ordering movies by popularity
-  mostPopularMovies <- orderItemsByCount(goodRatings)
+  mostPopularMovies <- OrderItemsByCount(goodRatings)
 }
 
-filterGoodRatings <- function(URM, threshold) {
+FilterGoodRatings <- function(URM, threshold) {
   goodRatings <- URM[URM$Rating >= threshold,]
   row.names(goodRatings) <- NULL
   return(goodRatings)
@@ -37,7 +36,7 @@ filterGoodRatings <- function(URM, threshold) {
 
 # Expects a dataFrame with "ItemId" repeated
 # Returns a vector ordered by count
-orderItemsByCount <- function(df) {
+OrderItemsByCount <- function(df) {
   # Ordering items by count
   itemCount <- count(df, "ItemId")
   itemsByCount <- arrange(itemCount, desc(freq))
@@ -47,7 +46,7 @@ orderItemsByCount <- function(df) {
 
 # First parameter should have an ItemIds column with a singleton list with a vector
 # Second should be the recommendations available to this user as a vector of item ids
-removeSeenItems <- function(userRow, recommendations)
+RemoveSeenItems <- function(userRow, recommendations)
 {
   seenItems <- userRow$ItemIds[[1]]
   # Remove from recommendations
