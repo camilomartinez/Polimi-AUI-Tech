@@ -105,7 +105,7 @@ MostPopularByGenre <- function(urm, movies) {
     data.frame(ItemId = itemCount)
   })
   # Aggregate into genre and vector
-  popularByGenre <- summariseItemsBy(itemPopularityByGenre, "Genre")
+  popularByGenre <- SummariseItemsBy(itemPopularityByGenre, "Genre")
 }
 
 # Seen items for evaluation or not
@@ -120,13 +120,13 @@ FilterSeenItems <- function(urm, forEvaluation) {
 ItemsSeenByTestUsers <- function(urm) {
   testUserIds <- LoadTestUserIds()
   testRatings <- merge(testUserIds, urm)
-  summariseItemsBy(testRatings, "UserId")
+  SummariseItemsBy(testRatings, "UserId")
 }
 
 ItemsSeenByNonTestUsers <- function(urm) {
   testUserIds <- LoadTestUserIds()
   nonTestRatings <- urm[! urm$UserId %in% testUserIds$UserId,]
-  summariseItemsBy(nonTestRatings, "UserId")
+  SummariseItemsBy(nonTestRatings, "UserId")
 }
 
 LoadTestUserIds <- function() {
@@ -134,7 +134,7 @@ LoadTestUserIds <- function() {
 }
 
 # Aggregate items as a vector grouping by a column
-summariseItemsBy <- function(df, groupBy) {
+SummariseItemsBy <- function(df, groupBy) {
   ddply(df, groupBy, summarise, ItemIds = list(ItemId))
 }
 
