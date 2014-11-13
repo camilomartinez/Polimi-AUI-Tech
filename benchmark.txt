@@ -1,0 +1,5 @@
+﻿MAP@5 for popular recommendations on non test users (No split, i.e. on training set -> Optimistic)
+0.3282085
+
+MAP@5 for popular by genre (not possible to calculate for all the data) around
+0.15

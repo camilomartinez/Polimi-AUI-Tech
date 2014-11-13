@@ -5,46 +5,58 @@ library("Metrics")
 
 # Returns a functions that takes user row input as parameter
 # removeSeen: Wheter to recommend already seen interactions
-# n: how many items to recommend
-PopularRecommender <- function(urm, removeSeen, n) {
+# numberOfRecommendations: how many items to recommend
+PopularRecommender <- function(urm, removeSeen, numberOfRecommendations) {
   mostPopularItems <- MostPopularItems(urm)
   function(userRow) {
-    if (removeSeen) {
-      recommendedItems <- RemoveSeenItems(userRow, mostPopularItems)
-      # Take as many as n items
-      head(recommendedItems, n)
-    } else {
-      # Take as many as n items
-      head(mostPopularItems, n)
-    }
+    RecommendForUser(userRow, mostPopularItems, removeSeen, numberOfRecommendations)
   }
 }
 
 # Returns a functions that takes user row input as parameter
 # removeSeen: Wheter to recommend already seen interactions
 # movies metadata
-# n: how many items to recommend
-PopularByGenreRecommender <- function(urm, movies, removeSeen, n) {
+# numberOfRecommendations: how many items to recommend
+PopularByGenreRecommender <- function(urm, removeSeen, numberOfRecommendations) {
+  movies <- LoadMovies()
   mostPopularByGenre <- MostPopularByGenre(urm, movies)
-  moviesByGenre <- ddply(movies, "MovieId", function(row) {
+  moviesWithGenre <- ddply(movies, "MovieId", function(row) {
     # Extract genre vector
     Genre <- row$Genre[[1]]
     data.frame(Genre)
   })
   function(userRow) {
+    userRatings <- urm[urm$UserId == userRow$UserId,]
+    # Could be filtered by 3 here to be more flexible
+    goodRatings <- FilterGoodRatings(userRatings)
     # Anotate ratings with genre
-    goodRatings <- FilterGoodRatings(userRow)
-    ratingsWithGenre <- merge(goodRatings, moviesByGenre, by.x="ItemId", by.y="MovieId")
-    itemsPerGenre <- ddply(ratingsWithGenre, "Genre", CountItems(df))
-    if (removeSeen) {
-      recommendedItems <- RemoveSeenItems(userRow, mostPopularItems)
-      # Take as many as n items
-      head(recommendedItems, n)
-    } else {
-      # Take as many as n items
-      head(mostPopularItems, n)
-    }
+    ratingsWithGenre <- merge(goodRatings, moviesWithGenre, by.x="ItemId", by.y="MovieId")
+    itemCountPerGenre <- count(ratingsWithGenre, "Genre")
+    itemCountPerGenre <- arrange(itemCountPerGenre, desc(freq))
+    totalCount <- sum(itemCountPerGenre$freq)
+    itemCountPerGenre$share <- ceiling(5 * itemCountPerGenre$freq / totalCount)
+    moviesTaken <- ddply(itemCountPerGenre, "Genre", function(genreRow) {
+      genre <- genreRow$Genre
+      ItemId <- head(GetItemIdsVector(mostPopularByGenre[mostPopularByGenre$Genre == genre,]),genreRow$share)
+      data.frame(ItemId)
+    })
+    # Extract recommended items
+    recommendedItems <- as.vector(moviesTaken$ItemId)
+    # TODO: For each genre where the share is greater than 0 take some movies
+    #GetItemIdsVector(mostPopularByGenre[mostPopularByGenre$Genre == "Drama",])
+    RecommendForUser(userRow, recommendedItems, removeSeen, numberOfRecommendations)
   }
+}
+
+# Recommend n items removing those seen if indicated 
+RecommendForUser <- function(userRow, recommendedItems, removeSeen, numberOfRecommendations) {
+  if (removeSeen) {
+    itemsToRecommend <- RemoveSeenItems(userRow, recommendedItems)
+  } else {
+    itemsToRecommend <- recommendedItems
+  }
+  # Take as many as recommendations as requested
+  head(recommendedItems, numberOfRecommendations)
 }
 
 # Return most popular items by count of goodRatings
@@ -82,7 +94,7 @@ CountItems <- function(df) {
 # Second should be the recommendations available to this user as a vector of item ids
 RemoveSeenItems <- function(userRow, recommendations)
 {
-  seenItems <- userRow$ItemIds[[1]]
+  seenItems <- GetItemIdsVector(userRow)
   # Remove from recommendations
   setdiff(recommendations, seenItems)
 }
@@ -166,6 +178,10 @@ ReadCsvData <- function(filename) {
 GenerateRecommendations <- function(seenItems, recommendationFunction, submission) {
   recommendations <- ddply(seenItems, "UserId", function(row) {
     ItemId <- recommend(row)
+    if (length(ItemId) == 0)
+    {
+      ItemId = c(1)
+    }
     data.frame(ItemId)
   })
   # Aggregating recommendations per user
@@ -181,30 +197,32 @@ GenerateRecommendations <- function(seenItems, recommendationFunction, submissio
 }
 
 # df is a data frame with a "ItemIds" Column as a list with a single vector element
-GetItemIdsVector <- function(row) {
-  row$ItemIds[[1]]
+GetItemIdsVector <- function(userRow) {
+  userRow$ItemIds[[1]]
 }
 
 # print map or generate submission file
 GenerateOutput <- function(urm, recommendedPerUser, forEvaluation) {
   if(forEvaluation) {
-    seenItems <- ItemsSeenByNonTestUsers(urm)
-    CalculateMap(seenItems, recommendedPerUser)
+    CalculateMap(urm, recommendedPerUser)
   } else {
     WriteSubmission(recommendedPerUser)
   }
 }
 
 # Print the MAP at the indicated number of recommendations
-CalculateMap <- function(seenItems, recommendedPerUser) {
+CalculateMap <- function(urm, recommendedPerUser) {
+  # Filter relevant items per user
+  goodRatings <- FilterGoodRatings(urm)
+  relevantItems <- ItemsSeenByNonTestUsers(goodRatings)
+  relevantItemsPerUser = dlply(relevantItems, "UserId", GetItemIdsVector)
+  # Aggregate predictions per user
+  predictedPerUser = dlply(recommendedPerUser, "UserId", GetItemIdsVector)
+  # Compute number of recommendations done
   samplerecommendation = GetItemIdsVector(recommendedPerUser[1,])
   numberOfRecommendations = length(samplerecommendation)
-  # TODO: filter actual relevant items
-  relevantItems <- seenItems
-  actual = dlply(relevantItems, "UserId", GetItemIdsVector)
-  predicted = dlply(recommendedPerUser, "UserId", GetItemIdsVector)
   # Mean average precision from metrics package
-  mapk(numberOfRecommendations,actual, predicted)
+  mapk(numberOfRecommendations,relevantItemsPerUser, predictedPerUser)
 }
 
 WriteSubmission <- function(recommendedPerUser) {
