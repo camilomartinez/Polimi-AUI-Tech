@@ -16,4 +16,4 @@ seenItems <- FilterSeenItems(urm, evaluation)
 recommendedPerUser <- GenerateRecommendations(seenItems, recommend ,kSubmission)
 
 # Either prints the MAP for training or write the submission
-GenerateOutput(seenItems, recommendedPerUser, evaluation)
+GenerateOutput(urm, recommendedPerUser, evaluation)

@@ -186,8 +186,9 @@ GetItemIdsVector <- function(row) {
 }
 
 # print map or generate submission file
-GenerateOutput <- function(seenItems, recommendedPerUser, forEvaluation) {
+GenerateOutput <- function(urm, recommendedPerUser, forEvaluation) {
   if(forEvaluation) {
+    seenItems <- ItemsSeenByNonTestUsers(urm)
     CalculateMap(seenItems, recommendedPerUser)
   } else {
     WriteSubmission(recommendedPerUser)
