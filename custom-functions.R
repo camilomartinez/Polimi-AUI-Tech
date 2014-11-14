@@ -28,7 +28,7 @@ PopularByGenreRecommender <- function(urm, removeSeen, numberOfRecommendations) 
   function(userRow) {
     userRatings <- urm[urm$UserId == userRow$UserId,]
     # Could be filtered by 3 here to be more flexible
-    goodRatings <- FilterGoodRatings(userRatings)
+    goodRatings <- FilterGoodRatings(userRatings, 3)
     # Anotate ratings with genre
     ratingsWithGenre <- merge(goodRatings, moviesWithGenre, by.x="ItemId", by.y="MovieId")
     itemCountPerGenre <- count(ratingsWithGenre, "Genre")
@@ -68,10 +68,9 @@ MostPopularItems <- function(urm) {
   mostPopularMovies <- OrderItemsByCount(goodRatings)
 }
 
-FilterGoodRatings <- function(urm) {
-  # As per competition forum
-  kThreshold = 4
-  goodRatings <- urm[urm$Rating >= kThreshold,]
+# As per competition forum
+FilterGoodRatings <- function(urm, threshold = 4) {
+  goodRatings <- urm[urm$Rating >= threshold,]
   row.names(goodRatings) <- NULL
   return(goodRatings)
 }

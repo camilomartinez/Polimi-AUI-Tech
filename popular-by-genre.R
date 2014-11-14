@@ -5,7 +5,7 @@ source("common-setup.R")
 
 # Complete training user rating matrix
 urm <- LoadURM()
-#urm <- urm[100000:200000,]
+urm <- urm[100000:108000,]
 
 # Recommendation functions
 recommend <- PopularByGenreRecommender(urm, kRemoveSeen, kNumberOfRecommendations)
