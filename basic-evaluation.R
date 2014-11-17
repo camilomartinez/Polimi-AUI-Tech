@@ -1,28 +1,37 @@
-setwd("C:/Polimi/aui-rs/Polimi-AUI-Tech/data")
+library(recommenderlab)
 
-
-train.original = read.csv("shortTrain.csv")
+trainCsv = read.csv("data/train.csv")
+# Filtering out test ratings
+testUserIds = read.csv("data/test.csv")
+nonTestRatings <- trainCsv[! trainCsv$UserId %in% testUserIds$UserId,]
 
 # Coerce to the class used by recommenderlab
-train.sparse <- as(train.original, "realRatingMatrix")
+urm <- as(nonTestRatings, "realRatingMatrix")
+urmSample <- sample(urm, 1000)
+urmBinary <- binarize(urmSample, minRating=1)
 
-scheme <- evaluationScheme(train.sparse,
-                           method = "split",
-                           train = .9,
-                           #method = "cross-validation",
-                           given = 5,  # This match with the 5 ratings
-                                       # cold start problem
-                           goodRating = 4) # rating over which items
-                                           # are relevant
+scheme <- evaluationScheme(urmBinary,
+                           #method = "split",
+                           #train = .9,
+                           method = "cross-validation",
+                           given = 5)#,  # This match with the 5 ratings
+# cold start problem
+#goodRating = 4) # rating over which items
+# are relevant
 
 algorithms <- list(
-  "random items" = list(name="RANDOM", param=list(normalize = "Z-score")),
   "popular items" = list(name="POPULAR", param=list(normalize = "Z-score")),
-  #"user-based CF" = list(name="UBCF", param=list(normalize = "Z-score",method="pearson",nn=10, minRating=4)),
-  "SVD" = list(name="SVD")
+  "association rules" = list(name="AR")
 )
-  #"item-based CF" = list(name="IBCF", param=list(normalize = "Z-score")))
 
-results <- evaluate(scheme, algorithms, n=c(1,3,5,10))
+results <- evaluate(scheme, algorithms, n=c(1,2,3,4,5))
 
-plot (results, annotate = 1:4, legend="topleft")
+#Pay attention mainly to precision
+plot (results, "prec/rec", annotate = 1:2, legend="bottomright")
+
+prec5pop <- avg(results[[1]])[5,"precision"]
+prec5ar <- avg(results[[2]])[5,"precision"]
+formatString <- "Precision@5 for %s: %.4f"
+sprintf(formatString, "popular", prec5pop)
+sprintf(formatString, "AR", prec5ar)
+
