@@ -1,5 +1,7 @@
 library(recommenderlab)
 
+source("modified-recommender-lab.R")
+
 trainCsv = read.csv("data/train.csv")
 # Filtering out test ratings
 testUserIds = read.csv("data/test.csv")
@@ -7,7 +9,7 @@ nonTestRatings <- trainCsv[! trainCsv$UserId %in% testUserIds$UserId,]
 
 # Coerce to the class used by recommenderlab
 urm <- as(nonTestRatings, "realRatingMatrix")
-urmSample <- sample(urm, 1000)
+urmSample <- sample(urm, 100)
 urmBinary <- binarize(urmSample, minRating=1)
 
 scheme <- evaluationScheme(urmBinary,
