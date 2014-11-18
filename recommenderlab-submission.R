@@ -6,7 +6,7 @@ source("custom-functions.R")
 # SUbmission with association rules
 
 #Preparing training and test data
-trainCsv = read.csv("data/train.csv")
+trainCsv = ReadCsvData("train")
 # Coerce to the class used by recommenderlab
 urm <- as(trainCsv, "realRatingMatrix")
 # Binarize just according to ratings
@@ -15,7 +15,7 @@ urmBinary <- binarize(urm, minRating=1)
 recommender <- Recommender(urmBinary, method = "AR")
 popularRecommender <- Recommender(urmBinary, method = "POPULAR")
 # Generate recommendations
-testCsv <- read.csv("data/test.csv")
+testCsv <- ReadCsvData("test")
 testUserIds <- testCsv$UserId
 recommendations <- predict(recommender, testUserIds, data=urmBinary, n=5)
 as(recommendations,"list")

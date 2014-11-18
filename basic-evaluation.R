@@ -17,9 +17,9 @@ algorithms <- list(
 # Coerce to the class used by recommenderlab
 urm <- as(nonTestRatings, "realRatingMatrix")
 # Sample to speed up calculations
-urmSample <- sample(urm, 1000)
+#urmSample <- sample(urm, 1000)
 # Use all users to more accurate evaluations
-#urmSample <- urm
+urmSample <- urm
 # Binarize just according to ratings
 urmBinary <- binarize(urmSample, minRating=1)
 
