@@ -1,6 +1,5 @@
 /data/*.Rhistory
 *.RData
-data/train.csv
 submissions/
 .Rproj.user
 .Rhistory
