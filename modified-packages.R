@@ -44,7 +44,15 @@ setMethod("calcPredictionAccuracy", signature(x= "topNList",
 ## recommendations based on association rules
 # Modified to binarize before recommendations are made
 
-source("RECOM_BIN_AR.R")
+# All what we need from RECOM_BIN_AR.R
+.BIN_AR_param <- list(
+  support = 0.1, 
+  confidence = 0.3,
+  maxlen = 2,
+  measure = "confidence",
+  verbose = FALSE, 
+  decreasing = TRUE
+)
 
 .REAL_AR_param <- list(
   # new parameter to control the minimum rating to binarize
