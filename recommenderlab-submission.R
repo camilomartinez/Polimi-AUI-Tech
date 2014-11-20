@@ -1,6 +1,7 @@
 library(recommenderlab)
 library(plyr)
 
+source("modified-packages.R")
 source("custom-functions.R")
 
 # SUbmission with association rules
@@ -10,14 +11,14 @@ trainCsv = ReadCsvData("train")
 # Coerce to the class used by recommenderlab
 urm <- as(trainCsv, "realRatingMatrix")
 # Binarize just according to ratings
-urmBinary <- binarize(urm, minRating=1)
+#urmBinary <- binarize(urm, minRating=1)
 # Train recommender
-recommender <- Recommender(urmBinary, method = "AR")
-popularRecommender <- Recommender(urmBinary, method = "POPULAR")
+recommender <- Recommender(urm, method = "AR", param=list(minRating=1))
+popularRecommender <- Recommender(urm, method = "POPULAR")
 # Generate recommendations
 testCsv <- ReadCsvData("test")
 testUserIds <- testCsv$UserId
-recommendations <- predict(recommender, testUserIds, data=urmBinary, n=5)
+recommendations <- predict(recommender, testUserIds, data=urm, n=5)
 as(recommendations,"list")
 # Aggregate per user
 recommendedPerUser <- data.frame(UserId = testUserIds)
@@ -38,7 +39,7 @@ submission <- ddply(recommendedPerUser, "UserId",
                       } else {
                         # Fill missing recommendations with popular
                         topPopular <- predict(popularRecommender, userRow$UserId,
-                                              data=urmBinary, n=5)
+                                              data=urm, n=5)
                         # Convert from topNList to vector
                         topPopular <- as(topPopular, "list")[[1]]
                         newRecommendations <- head(topPopular, numberOfMissingRecommendations)
