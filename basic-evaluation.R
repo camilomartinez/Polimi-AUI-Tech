@@ -38,11 +38,12 @@ evaluateN = c(1,5)
 results <- evaluate(scheme, algorithms, n=evaluateN)
 
 #Pay attention mainly to precision
-plot (results, "prec/rec", annotate = 1:2, legend="bottomright")
+plot (results, "prec/rec", annotate = FALSE, legend="bottomright")
 
-map5pop <- avg(results[[1]])[2,"MAP"]
-map5ar <- avg(results[[2]])[2,"MAP"]
 formatString <- "MAP@5 for %s: %.4f"
-sprintf(formatString, "popular", map5pop)
-sprintf(formatString, "AR", map5ar)
+algoNames <- names(algorithms)
+for (i in 1:length(algorithms)) {
+  map <- avg(results[[i]])[2,"MAP"]
+  print(sprintf(formatString, algoNames[i], map))
+}
 
