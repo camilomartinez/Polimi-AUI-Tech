@@ -67,10 +67,3 @@ BIN_AR <- function(data, parameter = NULL) {
 	new("Recommender", method = "AR", dataType = "binaryRatingMatrix",
 		ntrain = nrow(data), model = model, predict = predict)
 }
-
-## register recommender
-recommenderRegistry$set_entry(
-	method="AR", dataType = "binaryRatingMatrix", fun=BIN_AR,
-    description="Recommender based on association rules.",
-    parameters=.BIN_AR_param
-  )

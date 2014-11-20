@@ -21,22 +21,27 @@ urm <- as(nonTestRatings, "realRatingMatrix")
 # Use all users to more accurate evaluations
 urmSample <- urm
 # Binarize just according to ratings
-urmBinary <- binarize(urmSample, minRating=1)
+#urmBinary <- binarize(urmSample, minRating=1)
 
-scheme <- evaluationScheme(urmBinary,
+scheme <- evaluationScheme(urmSample,
                            # Speed up calculations only one pass
                            #method = "split",
                            #train = .9,
                            method = "cross-validation",
-                           given = 5) # Cold-start problem
+                           given = 5,
+                           goodRating = 4) # Cold-start problem
 
-results <- evaluate(scheme, algorithms, n=c(1,2,3,4,5))
+# Exhaustive evaluate at each k
+#evaluateN = c(1,2,3,4,5)
+# Fast linear approx with k 1 and 5
+evaluateN = c(1,5)
+results <- evaluate(scheme, algorithms, n=evaluateN)
 
 #Pay attention mainly to precision
 plot (results, "prec/rec", annotate = 1:2, legend="bottomright")
 
-map5pop <- avg(results[[1]])[5,"MAP"]
-map5ar <- avg(results[[2]])[5,"MAP"]
+map5pop <- avg(results[[1]])[2,"MAP"]
+map5ar <- avg(results[[2]])[2,"MAP"]
 formatString <- "MAP@5 for %s: %.4f"
 sprintf(formatString, "popular", map5pop)
 sprintf(formatString, "AR", map5ar)
