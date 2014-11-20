@@ -109,7 +109,7 @@ myApk <- function(k, actual, predicted)
   ###### Modified ############
   # Added line to control length of the prediction
   # If empty then 0
-  if ((length(predicted) > 0) && (k > 0))
+  if ((length(predicted) > 0) && (k > 0) && (length(actual) > 0))
   {
     cnt <- 0.0
     for (i in 1:min(k,length(predicted)))
@@ -120,7 +120,8 @@ myApk <- function(k, actual, predicted)
         score <- score + cnt/i 
       }
     }
-    score <- score / min(length(actual), k)
+    # Change done to agree with Kaggle's C# implementation
+    score <- score / length(actual)
   }
   score
 }
