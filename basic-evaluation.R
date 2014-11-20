@@ -1,6 +1,6 @@
 library(recommenderlab)
 
-source("modified-recommender-lab.R")
+source("modified-packages.R")
 
 #Preparing training and test data
 trainCsv = read.csv("data/train.csv")
