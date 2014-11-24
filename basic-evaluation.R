@@ -11,7 +11,7 @@ nonTestRatings <- trainCsv[! trainCsv$UserId %in% testUserIds$UserId,]
 # Algorithms used for the evaluation
 algorithms <- list(
   "popular items" = list(name="POPULAR", param=list(normalize = "Z-score")),
-  "association rules" = list(name="AR")
+  "association rules" = list(name="AR", param=list(support=0.02))
 )
 
 # Coerce to the class used by recommenderlab
