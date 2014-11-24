@@ -13,7 +13,7 @@ urm <- as(trainCsv, "realRatingMatrix")
 # Binarize just according to ratings
 #urmBinary <- binarize(urm, minRating=1)
 # Train recommender
-recommender <- Recommender(urm, method = "AR", param=list(minRating=1))
+recommender <- Recommender(urm, method = "AR", param=list(support=0.02))
 popularRecommender <- Recommender(urm, method = "POPULAR")
 # Generate recommendations
 testCsv <- ReadCsvData("test")
